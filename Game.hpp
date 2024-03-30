@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <utility>
+#include <random>
 
 class Game : public Board {
 public:
@@ -20,7 +21,12 @@ public:
     int AIvAI(char (&board)[3][3]);
 
     int humanMove(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player);
-    void AIMove(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player);
+    int AIMove(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player, const int& level);
+    int AIEasy(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player);
+    int AIMedium(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player);
+    int AIHard(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player);
+    int AIImpossible(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player);
+    int minimax();
 
     void stringToLower(std::string &s) const;
 

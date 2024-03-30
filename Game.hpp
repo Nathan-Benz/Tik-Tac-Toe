@@ -3,38 +3,31 @@
 
 #include "Board.hpp"
 #include <iostream>
+#include <string>
+#include <utility>
 
 class Game : public Board {
 public:
     Game();
 
-    void gameManager(const bool& play_ai);
-    void playerSelect();
-    void resetGame();
+    void match();
+    void gameSetUp();
+    void matchOver(const char (&board)[3][3], const int& result);
 
-    int playerTurn();
-    int opponentTurn();
+    int PvP(char (&board)[3][3]);
+    int PvAI(char (&board)[3][3]);
+    int AIvP(char (&board)[3][3]);
+    int AIvAI(char (&board)[3][3]);
 
-    int Turn(const char& player, const bool& main_player);
-    int aiTurn();
-    int minimax(int (&curr_board)[3][3], int depth, bool maximixing, int row, int col);
+    int humanMove(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player);
+    void AIMove(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player);
 
-    bool checkRow(const int& row) const;
-    bool checkCol(const int& col) const;
-    bool checkDiagnoal() const;
-    bool checkBoard(const int& row, const int& col) const;
-    bool isComplete() const;
-
-    //The folowing functions handle a clone game state and not the original
-    bool checkRow(int (&curr_board)[3][3], const int& row) const;
-    bool checkCol(int (&curr_board)[3][3], const int& col) const;
-    bool checkDiagnoal(int (&curr_board)[3][3]) const;
-    bool checkBoard(int (&curr_board)[3][3], const int& row, const int& col) const;
+    void stringToLower(std::string &s) const;
 
 private:
-    int total_turns;
-    char player1, player2;
-    bool complete_;
+    //Player - Name (Human or AI) , {(human or ai), ('o', or 'x')}
+    std::pair<std::string, std::pair<bool, char>> player1, player2;
+    int finished;
 };
 
 #endif

@@ -6,7 +6,7 @@
 int main() {
     Game game;
 
-    game.gameManager(0);
+    game.match();
 
     return 0;
 }

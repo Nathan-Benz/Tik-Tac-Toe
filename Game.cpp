@@ -228,35 +228,25 @@ int Game::AIEasy(char (&board)[3][3], const char& symbol) {
     return gameStatus(symbol, board, row, col);
 }
 
-int Game::minimax(char (&board)[3][3], int depth, bool maximing) {
+int Game::minimax(char (&board)[3][3], int depth, bool maxing) {
     if (winner(board) != 0 || depth == 0 || isFilled(board)) {
-        if (maximing) return winner(board);
+        if (maxing) return winner(board);
         else return winner(board);
     }
 
-    if (maximing) {
-        int best_score = INT_MIN;
+    int best_score = (maxing)? INT_MIN : INT_MAX;
 
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                if (isCellEmpty(board,i,j)) {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (isCellEmpty(board,i,j)) {
+                if (maxing) {
                     updateCell('o',board,i,j);
                     int score = minimax(board,depth - 1,false);
                     board[i][j] = ' ';
 
                     best_score = std::max(best_score,score);
                 }
-            }
-        }
-
-        return best_score;
-    }
-    else {
-        int best_score = INT_MAX;
-
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                if (isCellEmpty(board,i,j)) {
+                else {
                     updateCell('x',board,i,j);
                     int score = minimax(board,depth - 1,true);
                     board[i][j] = ' ';
@@ -265,9 +255,9 @@ int Game::minimax(char (&board)[3][3], int depth, bool maximing) {
                 }
             }
         }
-
-        return best_score;
     }
+
+    return best_score;
 }
 
 int Game::AIMedium(char (&board)[3][3], const char& symbol) {

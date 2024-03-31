@@ -29,7 +29,7 @@ public:
     int AIMedium(char (&board)[3][3], const char& symbol);
     int AIHard(char (&board)[3][3], const char& symbol);
     int AIImpossible(char (&board)[3][3], const char& symbol);
-    int minimax(char (&board)[3][3], int depth, bool maximing);
+    int minimax(char (&board)[3][3], int depth, bool maxing);
 
     void stringToLower(std::string &s) const;
     void pause() const;

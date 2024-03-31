@@ -1,6 +1,6 @@
 #include "Game.hpp"
 
-Game::Game() : Board(), player1{"", {false, ' '}}, player2{"", {false, ' '}}, finished{0} {}
+Game::Game() : Board(), player1{"", {false, ' '}}, player2{"", {false, ' '}}, finished{0}, ai_1_lvl{-1}, ai_2_lvl{-1} {}
 
 void Game::match() {
     gameSetUp();
@@ -28,7 +28,7 @@ void Game::gameSetUp() {
     } while (decision != "human" && decision != "ai");
 
     if (decision == "human") {player1.first = "HUMAN_1";player1.second.first = true;}
-    else {player1.first = "AI_1";player1.second.first = false;}
+    else {player1.first = "AI_1";player1.second.first = false; setAILevel(player1);}
     
     do {
         std::cout << "\033[2J\033[H";
@@ -39,7 +39,7 @@ void Game::gameSetUp() {
     } while (decision != "human" && decision != "ai");
 
     if (decision == "human") {player2.first = "HUMAN_2";player2.second.first = true;}
-    else {player2.first = "AI_2";player2.second.first = false;}
+    else {player2.first = "AI_2";player2.second.first = false; setAILevel(player2);}
 
     do {
         std::cout << "\033[2J\033[H";
@@ -77,7 +77,7 @@ void Game::matchOver(const char (&board)[3][3], const int& result) {
             if (player1.second.second == 'x') std::cout<<player1.first<<" ("<<player1.second.second<<") WINS!";
             else std::cout<<player2.first<<" ("<<player2.second.second<<") WINS!";
         }
-        else std::cout<<"DRAWED GAME! NO ONE WINS.";
+        else std::cout<<"IT'S A DRAW! NO ONE WINS.";
 
         std::cout<<"\n";
 
@@ -94,15 +94,17 @@ void Game::matchOver(const char (&board)[3][3], const int& result) {
 int Game::PvP(char (&board)[3][3]) {
     int turns = 0, finished = 0;
     
-    std::cout << "\033[2J\033[H";
-
     do {
-        finished = humanMove(board, player1);
+        std::cout<<player1.first<<"'s Turn. ("<<player1.second.second<<")\n";
+        drawBoard(board);
+        finished = humanMove(board, player1.second.second);
         turns++;
 
         if (finished != 0 || turns >= 9) break;
 
-        finished = humanMove(board, player2);
+        std::cout<<player2.first<<"'s Turn. ("<<player2.second.second<<")\n";
+        drawBoard(board);
+        finished = humanMove(board, player2.second.second);
         turns++;
 
     }   while(finished == 0 && turns < 9);
@@ -118,12 +120,14 @@ int Game::PvAI(char (&board)[3][3]) {
     std::cout << "\033[2J\033[H";
 
     do {
-        finished = humanMove(board, player1);
+        std::cout<<player1.first<<"'s Turn. ("<<player1.second.second<<")\n";
+        drawBoard(board);
+        finished = humanMove(board, player1.second.second);
         turns++;
 
         if (finished != 0 || turns >= 9) break;
 
-        finished = AIMove(board, player2, 0);
+        finished = AIMove(board, player2.second.second, ai_2_lvl);
         turns++;
 
     }   while(finished == 0 && turns < 9);
@@ -139,12 +143,14 @@ int Game::AIvP(char (&board)[3][3]) {
     std::cout << "\033[2J\033[H";
 
     do {
-        finished = AIMove(board, player1, 0);
+        finished = AIMove(board, player1.second.second, ai_1_lvl);
         turns++;
 
         if (finished != 0 || turns >= 9) break;
 
-        finished = humanMove(board, player2);
+        std::cout<<player2.first<<"'s Turn. ("<<player2.second.second<<")\n";
+        drawBoard(board);
+        finished = humanMove(board, player2.second.second);
         turns++;
 
     }   while(finished == 0 && turns < 9);
@@ -160,13 +166,23 @@ int Game::AIvAI(char (&board)[3][3]) {
     std::cout << "\033[2J\033[H";
 
     do {
-        finished = AIMove(board, player1, 0);
+        pause();
+
+        std::cout<<player1.first<<"'s Turn. ("<<player1.second.second<<")\n";
+        finished = AIMove(board, player1.second.second, ai_1_lvl);
+        drawBoard(board);
         turns++;
 
         if (finished != 0 || turns >= 9) break;
 
-        finished = AIMove(board, player2, 0);
+        pause();
+
+        std::cout<<player2.first<<"'s Turn. ("<<player2.second.second<<")\n";
+        finished = AIMove(board, player2.second.second, ai_2_lvl);
+        drawBoard(board);
         turns++;
+
+        
 
     }   while(finished == 0 && turns < 9);
 
@@ -175,30 +191,27 @@ int Game::AIvAI(char (&board)[3][3]) {
     return finished;
 }
 
-int Game::humanMove(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player) {
+int Game::humanMove(char (&board)[3][3], const char& symbol) {
     int row, col;
 
     do {
-        //std::system("cls");
-        std::cout<<player.first<<"'s Turn. ("<<player.second.second<<")\n";
-        drawBoard(board);
         std::cout<<"Enter a row then a column: ";
         std::cin>>row>>col; 
 
-    }   while (!updateCell(player.second.second, board, row, col));
+    }   while (!updateCell(symbol, board, row, col));
 
-    return gameStatus(player.second.second, board, row, col);
+    return gameStatus(symbol, board, row, col);
 }
 
-int Game::AIMove(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player, const int& level) {
-    if (level == 0) return AIEasy(board, player);
-    else if (level == 1) return AIMedium(board, player);
-    else if (level == 2) return AIHard(board, player);
-    else if (level == 3) return AIImpossible(board, player);
+int Game::AIMove(char (&board)[3][3], const char& symbol, const int& level) {
+    if (level == 0) return AIEasy(board, symbol);
+    else if (level == 1) return AIMedium(board, symbol);
+    else if (level == 2) return AIHard(board, symbol);
+    else if (level == 3) return AIImpossible(board, symbol);
     return 0;
 }
 
-int Game::AIEasy(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player) {
+int Game::AIEasy(char (&board)[3][3], const char& symbol) {
     int row;
     int col;
 
@@ -210,24 +223,183 @@ int Game::AIEasy(char (&board)[3][3], const std::pair<std::string, std::pair<boo
         row = dist(gen);
         col = dist(gen);
         
-    }   while (!updateCell(player.second.second, board,row,col));
+    }   while (!updateCell(symbol, board,row,col));
 
-    std::cout<<player.first<<"'s Turn. ("<<player.second.second<<")\n";
-    drawBoard(board);
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::string temp;
-    std::cout<<"Press enter to continue.";
-    std::getline(std::cin, temp);
-
-    return gameStatus(player.second.second, board, row, col);
+    return gameStatus(symbol, board, row, col);
 }
 
-int Game::minimax() {}
+int Game::minimax(const char &symbol, char (&board)[3][3], int depth, bool maximing, int row, int col) {
+    if (gameStatus(symbol, board, row, col) != 0 || depth == 0) return gameStatus(symbol, board, row, col);
 
-int Game::AIMedium(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player) {return 0;}
+    if (maximing) {
+        int best_score = INT_MIN;
 
-int Game::AIHard(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player) {return 0;}
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                if (isCellEmpty(board,i,j)) {
+                    updateCell(symbol, board, i, j);
+                    int score = minimax(symbol, board, depth - 1, false, i, j);
+                    board[i][j] = ' ';
+                    best_score = std::max(best_score, score);
+                }
+            }
+        }
+
+        return best_score;
+    }
+    else {
+        int best_score = INT_MAX;
+
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                if (isCellEmpty(board,i,j)) {
+                    updateCell(invertSymbol(symbol), board, i, j);
+                    int score = minimax(invertSymbol(symbol), board, depth - 1, true, i, j);
+                    board[i][j] = ' ';
+                    best_score = std::min(best_score, score);
+                }
+            }
+        }
+
+        return best_score;
+    }
+}
+
+int Game::AIMedium(char (&board)[3][3], const char& symbol) {\
+    int best_score;
+    if (symbol == 'o') best_score = INT_MIN;
+    else best_score = INT_MAX;
     
-int Game::AIImpossible(char (&board)[3][3], const std::pair<std::string, std::pair<bool, char>>& player) {return 0;}
+    int best_row = -1, best_column = -1;
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (isCellEmpty(board,i,j)) {
+                updateCell(symbol,board,i,j);
+                int score = minimax(symbol,board,3,false,i,j);
+                board[i][j] = ' ';
+
+                if (symbol == 'o')  {
+                    if (score > best_score) {
+                        best_row = i;
+                        best_column = j;
+                        best_score = score;
+                    }
+                }
+                else {
+                    if (score < best_score) {
+                        best_row = i;
+                        best_column = j;
+                        best_score = score;                        
+                    }
+                }
+            }
+        }
+    }
+    
+    if (best_row != -1 && best_column != -1) {
+        updateCell(symbol,board,best_row,best_column);
+        return gameStatus(symbol,board,best_row,best_column);
+    }
+
+    return 0;
+}
+
+int Game::AIHard(char (&board)[3][3], const char& symbol) {
+    int best_score;
+    if (symbol == 'o') best_score = INT_MIN;
+    else best_score = INT_MAX;
+    
+    int best_row = -1, best_column = -1;
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (isCellEmpty(board,i,j)) {
+                updateCell(symbol,board,i,j);
+                int score = minimax(symbol,board,6,false,i,j);
+                board[i][j] = ' ';
+
+                if (symbol == 'o')  {
+                    if (score > best_score) {
+                        best_row = i;
+                        best_column = j;
+                        best_score = score;
+                    }
+                }
+                else {
+                    if (score < best_score) {
+                        best_row = i;
+                        best_column = j;
+                        best_score = score;                        
+                    }
+                }
+            }
+        }
+    }
+    
+    if (best_row != -1 && best_column != -1) {
+        updateCell(symbol,board,best_row,best_column);
+        return gameStatus(symbol,board,best_row,best_column);
+    }
+
+    return 0;
+}
+    
+int Game::AIImpossible(char (&board)[3][3], const char& symbol) {
+    int best_score;
+    if (symbol == 'o') best_score = INT_MIN;
+    else best_score = INT_MAX;
+    
+    int best_row = -1, best_column = -1;
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (isCellEmpty(board,i,j)) {
+                updateCell(symbol,board,i,j);
+                int score = minimax(symbol,board,INT_MAX,false,i,j);
+                board[i][j] = ' ';
+
+                if (symbol == 'o')  {
+                    if (score > best_score) {
+                        best_row = i;
+                        best_column = j;
+                        best_score = score;
+                    }
+                }
+                else {
+                    if (score < best_score) {
+                        best_row = i;
+                        best_column = j;
+                        best_score = score;                        
+                    }
+                }
+            }
+        }
+    }
+    
+    if (best_row != -1 && best_column != -1) {
+        updateCell(symbol,board,best_row,best_column);
+        return gameStatus(symbol,board,best_row,best_column);
+    }
+
+    return 0;
+}
+
+void Game::setAILevel(const std::pair<std::string, std::pair<bool, char>>& player) {
+    int level;
+    do {
+        std::cout << "\033[2J\033[H";
+        std::cout<<"Select AI dificculty level [0 - 3]: ";
+        std::cin>>level;
+
+    } while (level < 0 || level > 3);
+
+    if (player.first == "AI_1") ai_1_lvl = level;
+    else ai_2_lvl = level;
+}
 
 void Game::stringToLower(std::string &s) const {for (int i = 0; i < s.size(); ++i) s[i] = std::tolower(s[i]);}
+
+void Game::pause() const {std::cout << "Press enter to see next move.\n";std::cin.ignore();}
+
+char Game::invertSymbol(const char& symbol) const {return (symbol == 'x')? 'o' : 'x';}

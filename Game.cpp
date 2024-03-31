@@ -200,7 +200,7 @@ int Game::humanMove(char (&board)[3][3], const char& symbol) {
 
     }   while (!updateCell(symbol, board, row, col));
 
-    return gameStatus(symbol, board, row, col);
+    return gameStatus(symbol,board,row,col);
 }
 
 int Game::AIMove(char (&board)[3][3], const char& symbol, const int& level) {
@@ -228,8 +228,11 @@ int Game::AIEasy(char (&board)[3][3], const char& symbol) {
     return gameStatus(symbol, board, row, col);
 }
 
-int Game::minimax(const char &symbol, char (&board)[3][3], int depth, bool maximing, int row, int col) {
-    if (gameStatus(symbol, board, row, col) != 0 || depth == 0) return gameStatus(symbol, board, row, col);
+int Game::minimax(char (&board)[3][3], int depth, bool maximing) {
+    if (winner(board) != 0 || depth == 0 || isFilled(board)) {
+        if (maximing) return winner(board);
+        else return winner(board);
+    }
 
     if (maximing) {
         int best_score = INT_MIN;
@@ -237,10 +240,11 @@ int Game::minimax(const char &symbol, char (&board)[3][3], int depth, bool maxim
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
                 if (isCellEmpty(board,i,j)) {
-                    updateCell(symbol, board, i, j);
-                    int score = minimax(symbol, board, depth - 1, false, i, j);
+                    updateCell('o',board,i,j);
+                    int score = minimax(board,depth - 1,false);
                     board[i][j] = ' ';
-                    best_score = std::max(best_score, score);
+
+                    best_score = std::max(best_score,score);
                 }
             }
         }
@@ -253,10 +257,11 @@ int Game::minimax(const char &symbol, char (&board)[3][3], int depth, bool maxim
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
                 if (isCellEmpty(board,i,j)) {
-                    updateCell(invertSymbol(symbol), board, i, j);
-                    int score = minimax(invertSymbol(symbol), board, depth - 1, true, i, j);
+                    updateCell('x',board,i,j);
+                    int score = minimax(board,depth - 1,true);
                     board[i][j] = ' ';
-                    best_score = std::min(best_score, score);
+
+                    best_score = std::min(best_score,score);
                 }
             }
         }
@@ -265,124 +270,88 @@ int Game::minimax(const char &symbol, char (&board)[3][3], int depth, bool maxim
     }
 }
 
-int Game::AIMedium(char (&board)[3][3], const char& symbol) {\
-    int best_score;
-    if (symbol == 'o') best_score = INT_MIN;
-    else best_score = INT_MAX;
-    
-    int best_row = -1, best_column = -1;
+int Game::AIMedium(char (&board)[3][3], const char& symbol) {
+    int best_score = (symbol == 'o')? INT_MIN : INT_MAX;
+    int best_row = -1, best_col = -1;
+    bool maximizing = (symbol == 'o');
+
+    char clone[3][3];
+    cloneBoard(clone,board);
 
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            if (isCellEmpty(board,i,j)) {
-                updateCell(symbol,board,i,j);
-                int score = minimax(symbol,board,3,false,i,j);
-                board[i][j] = ' ';
+            if (isCellEmpty(clone,i,j)) {
+                updateCell(symbol,clone,i,j);
+                int score = (maximizing)? minimax(clone,2,false) : minimax(clone,2,true); 
+                clone[i][j] = ' ';
 
-                if (symbol == 'o')  {
-                    if (score > best_score) {
-                        best_row = i;
-                        best_column = j;
-                        best_score = score;
-                    }
-                }
-                else {
-                    if (score < best_score) {
-                        best_row = i;
-                        best_column = j;
-                        best_score = score;                        
-                    }
+                if ((maximizing && score > best_score) || (!maximizing && score < best_score)) {
+                    best_score = score;
+                    best_row = i;
+                    best_col = j;
                 }
             }
         }
     }
-    
-    if (best_row != -1 && best_column != -1) {
-        updateCell(symbol,board,best_row,best_column);
-        return gameStatus(symbol,board,best_row,best_column);
-    }
 
-    return 0;
+    updateCell(symbol,board,best_row,best_col);
+    return gameStatus(symbol,board,best_row,best_col);
 }
 
 int Game::AIHard(char (&board)[3][3], const char& symbol) {
-    int best_score;
-    if (symbol == 'o') best_score = INT_MIN;
-    else best_score = INT_MAX;
-    
-    int best_row = -1, best_column = -1;
+    int best_score = (symbol == 'o')? INT_MIN : INT_MAX;
+    int best_row = -1, best_col = -1;
+    bool maximizing = (symbol == 'o');
+
+    char clone[3][3];
+    cloneBoard(clone,board);
 
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            if (isCellEmpty(board,i,j)) {
-                updateCell(symbol,board,i,j);
-                int score = minimax(symbol,board,6,false,i,j);
-                board[i][j] = ' ';
+            if (isCellEmpty(clone,i,j)) {
+                updateCell(symbol,clone,i,j);
+                int score = (maximizing)? minimax(clone,4,false) : minimax(clone,4,true); 
+                clone[i][j] = ' ';
 
-                if (symbol == 'o')  {
-                    if (score > best_score) {
-                        best_row = i;
-                        best_column = j;
-                        best_score = score;
-                    }
-                }
-                else {
-                    if (score < best_score) {
-                        best_row = i;
-                        best_column = j;
-                        best_score = score;                        
-                    }
+                if ((maximizing && score > best_score) || (!maximizing && score < best_score)) {
+                    best_score = score;
+                    best_row = i;
+                    best_col = j;
                 }
             }
         }
     }
-    
-    if (best_row != -1 && best_column != -1) {
-        updateCell(symbol,board,best_row,best_column);
-        return gameStatus(symbol,board,best_row,best_column);
-    }
 
-    return 0;
+    updateCell(symbol,board,best_row,best_col);
+    return gameStatus(symbol,board,best_row,best_col);
 }
     
 int Game::AIImpossible(char (&board)[3][3], const char& symbol) {
-    int best_score;
-    if (symbol == 'o') best_score = INT_MIN;
-    else best_score = INT_MAX;
-    
-    int best_row = -1, best_column = -1;
+    int best_score = (symbol == 'o')? INT_MIN : INT_MAX;
+    int best_row = -1, best_col = -1;
+    bool maximizing = (symbol == 'o');
+
+    char clone[3][3];
+    cloneBoard(clone,board);
 
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
-            if (isCellEmpty(board,i,j)) {
-                updateCell(symbol,board,i,j);
-                int score = minimax(symbol,board,INT_MAX,false,i,j);
-                board[i][j] = ' ';
+            if (isCellEmpty(clone,i,j)) {
+                updateCell(symbol,clone,i,j);
+                int score = (maximizing)? minimax(clone,INT_MAX,false) : minimax(clone,INT_MAX,true); 
+                clone[i][j] = ' ';
 
-                if (symbol == 'o')  {
-                    if (score > best_score) {
-                        best_row = i;
-                        best_column = j;
-                        best_score = score;
-                    }
-                }
-                else {
-                    if (score < best_score) {
-                        best_row = i;
-                        best_column = j;
-                        best_score = score;                        
-                    }
+                if ((maximizing && score > best_score) || (!maximizing && score < best_score)) {
+                    best_score = score;
+                    best_row = i;
+                    best_col = j;
                 }
             }
         }
     }
-    
-    if (best_row != -1 && best_column != -1) {
-        updateCell(symbol,board,best_row,best_column);
-        return gameStatus(symbol,board,best_row,best_column);
-    }
 
-    return 0;
+    updateCell(symbol,board,best_row,best_col);
+    return gameStatus(symbol,board,best_row,best_col);
 }
 
 void Game::setAILevel(const std::pair<std::string, std::pair<bool, char>>& player) {

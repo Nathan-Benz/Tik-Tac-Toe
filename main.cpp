@@ -5,7 +5,7 @@
 
 int main() {
     Game game;
-
+    
     game.match();
 
     return 0;

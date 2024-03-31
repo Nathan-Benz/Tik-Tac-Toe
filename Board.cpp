@@ -40,7 +40,7 @@ int Board::completedRow(const char& symbol, const char (&board)[3][3], const int
 }
 
 int Board::completedColumn(const char& symbol, const char (&board)[3][3], const int& row, const int& col) {
-    if ((getCell(board,0,col) == getCell(board,1,col) && getCell(board,0,col) == getCell(board,2,col))) {
+    if ((getCell(board,0,col) == getCell(board,1,col) && getCell(board,0,col) == getCell(board,2,col))) {        
         if (symbol == 'o') return 1;
         else if (symbol == 'x') return -1;
 
@@ -50,9 +50,9 @@ int Board::completedColumn(const char& symbol, const char (&board)[3][3], const 
 
 int Board::completedDiagnoal(const char& symbol, const char (&board)[3][3], const int& row, const int& col) {
     if ((row == 0 && (col == 0 || col == 2)) || (row == 2 && (col == 0 || col == 2)) || (row == 1 && col == 1)) {
-        if (getCell(board,1,1) == ' ') return 0;
-
         if ((getCell(board,1,1) == getCell(board,0,0) && getCell(board,1,1) == getCell(board,2,2)) || (getCell(board,1,1) == getCell(board,0,2) && getCell(board,1,1) == getCell(board,2,0))) {
+            if (getCell(board,1,1) == ' ') return 0;
+            
             if (symbol == 'o') return 1;
             else if (symbol == 'x') return -1;
         }
@@ -64,6 +64,43 @@ int Board::gameStatus(const char& symbol, const char (&board)[3][3], const int& 
     if (completedRow(symbol,board,row,col) != 0) return completedRow(symbol,board,row,col);
     else if (completedColumn(symbol,board,row,col) != 0) return completedColumn(symbol,board,row,col);
     else if (completedDiagnoal(symbol,board,row,col) != 0) return completedDiagnoal(symbol,board,row,col);
+    return 0;
+}
+
+bool Board::isFilled(const char (&board)[3][3]) {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (board[i][j] == ' ') return false; 
+        }
+    }
+    return true;
+}
+
+int Board::winner(const char (&board)[3][3]) {
+    //Checks rows for 3 in a row
+    for (int i = 0; i < 3; ++i) {
+        if (board[i][0] == board[i][1] && board[i][0] == board[i][2]) {
+            if (board[i][0] == 'o') return 1;
+            if (board[i][0] == 'x') return -1;
+        }
+    }
+    //Checks columns for 3 in a row
+    for (int i = 0; i < 3; ++i) {
+        if (board[0][i] == board[1][i] && board[0][i] == board[2][i]) {
+            if (board[0][i] == 'o') return 1;
+            if (board[0][i] == 'x') return -1;
+        }
+    }
+    //Checks diagnoals
+    if (board[1][1] == board[0][0] && board[1][1] == board[2][2]) {
+        if (board[1][1] == 'o') return 1;
+        if (board[1][1] == 'x') return -1;
+    }
+    if (board[1][1] == board[0][2] && board[1][1] == board[2][0]) {
+        if (board[1][1] == 'o') return 1;
+        if (board[1][1] == 'x') return -1;
+    }
+
     return 0;
 }
 

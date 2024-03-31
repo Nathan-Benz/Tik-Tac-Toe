@@ -38,6 +38,12 @@ public:
     //Checks if game is finished. 1 then 'o' connected 3. -1 if 'x' connected 3. Zero otherwise
     int gameStatus(const char& symbol, const char (&board)[3][3], const int& row, const int& col);
 
+    //Checks if the board can still be played
+    bool isFilled(const char (&board)[3][3]);
+
+    //Checks entire board for a winner
+    int winner(const char (&board)[3][3]);
+
     //Makes a new instance of a board
     void cloneBoard(char (&lhs)[3][3], const char (&rhs)[3][3]);
 

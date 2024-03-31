@@ -260,9 +260,9 @@ int Game::minimax(char (&board)[3][3], int depth, bool maxing) {
     return best_score;
 }
 
-int Game::AIMedium(char (&board)[3][3], const char& symbol) {
+int Game::AIMinimaxCaller(char (&board)[3][3], const char& symbol, const int& depth) {
     int best_score = (symbol == 'o')? INT_MIN : INT_MAX;
-    int best_row = -1, best_col = -1;
+    std::vector<std::pair<int,int>> best_move;
     bool maximizing = (symbol == 'o');
 
     char clone[3][3];
@@ -272,77 +272,34 @@ int Game::AIMedium(char (&board)[3][3], const char& symbol) {
         for (int j = 0; j < 3; ++j) {
             if (isCellEmpty(clone,i,j)) {
                 updateCell(symbol,clone,i,j);
-                int score = (maximizing)? minimax(clone,2,false) : minimax(clone,2,true); 
+                int score = (maximizing)? minimax(clone,depth,false) : minimax(clone,depth,true); 
                 clone[i][j] = ' ';
 
                 if ((maximizing && score > best_score) || (!maximizing && score < best_score)) {
                     best_score = score;
-                    best_row = i;
-                    best_col = j;
+                    best_move.clear();
+                    best_move.push_back({i,j});
                 }
+                else if ((maximizing && score == best_score) || (!maximizing && score == best_score)) {best_move.push_back({i,j});}
             }
         }
     }
 
-    updateCell(symbol,board,best_row,best_col);
-    return gameStatus(symbol,board,best_row,best_col);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(0,best_move.size() - 1);
+
+    int num = dist(gen);
+
+    updateCell(symbol,board,best_move[num].first,best_move[num].second);
+    return gameStatus(symbol,board,best_move[num].first,best_move[num].second);
 }
 
-int Game::AIHard(char (&board)[3][3], const char& symbol) {
-    int best_score = (symbol == 'o')? INT_MIN : INT_MAX;
-    int best_row = -1, best_col = -1;
-    bool maximizing = (symbol == 'o');
+int Game::AIMedium(char (&board)[3][3], const char& symbol) {return AIMinimaxCaller(board,symbol,2);}
 
-    char clone[3][3];
-    cloneBoard(clone,board);
-
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            if (isCellEmpty(clone,i,j)) {
-                updateCell(symbol,clone,i,j);
-                int score = (maximizing)? minimax(clone,4,false) : minimax(clone,4,true); 
-                clone[i][j] = ' ';
-
-                if ((maximizing && score > best_score) || (!maximizing && score < best_score)) {
-                    best_score = score;
-                    best_row = i;
-                    best_col = j;
-                }
-            }
-        }
-    }
-
-    updateCell(symbol,board,best_row,best_col);
-    return gameStatus(symbol,board,best_row,best_col);
-}
+int Game::AIHard(char (&board)[3][3], const char& symbol) {return AIMinimaxCaller(board,symbol,4);}
     
-int Game::AIImpossible(char (&board)[3][3], const char& symbol) {
-    int best_score = (symbol == 'o')? INT_MIN : INT_MAX;
-    int best_row = -1, best_col = -1;
-    bool maximizing = (symbol == 'o');
-
-    char clone[3][3];
-    cloneBoard(clone,board);
-
-    for (int i = 0; i < 3; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            if (isCellEmpty(clone,i,j)) {
-                updateCell(symbol,clone,i,j);
-                int score = (maximizing)? minimax(clone,INT_MAX,false) : minimax(clone,INT_MAX,true); 
-                clone[i][j] = ' ';
-
-                if ((maximizing && score > best_score) || (!maximizing && score < best_score)) {
-                    best_score = score;
-                    best_row = i;
-                    best_col = j;
-                }
-            }
-        }
-    }
-
-    updateCell(symbol,board,best_row,best_col);
-    return gameStatus(symbol,board,best_row,best_col);
-}
+int Game::AIImpossible(char (&board)[3][3], const char& symbol) {return AIMinimaxCaller(board,symbol,INT_MAX);}
 
 void Game::setAILevel(const std::pair<std::string, std::pair<bool, char>>& player) {
     int level;

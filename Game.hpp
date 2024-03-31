@@ -30,6 +30,7 @@ public:
     int AIHard(char (&board)[3][3], const char& symbol);
     int AIImpossible(char (&board)[3][3], const char& symbol);
     int minimax(char (&board)[3][3], int depth, bool maxing);
+    int AIMinimaxCaller(char (&board)[3][3], const char& symbol, const int& depth);
 
     void stringToLower(std::string &s) const;
     void pause() const;

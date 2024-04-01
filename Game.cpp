@@ -228,7 +228,7 @@ int Game::AIEasy(char (&board)[3][3], const char& symbol) {
     return gameStatus(symbol, board, row, col);
 }
 
-int Game::minimax(char (&board)[3][3], int depth, bool maxing) {
+int Game::minimax(char (&board)[3][3], int depth, bool maxing, int alpha, int beta) {
     if (winner(board) != 0 || depth == 0 || isFilled(board)) {
         if (maxing) return winner(board);
         else return winner(board);
@@ -241,17 +241,23 @@ int Game::minimax(char (&board)[3][3], int depth, bool maxing) {
             if (isCellEmpty(board,i,j)) {
                 if (maxing) {
                     updateCell('o',board,i,j);
-                    int score = minimax(board,depth - 1,false);
+                    int score = minimax(board,depth - 1,false, alpha, beta);
                     board[i][j] = ' ';
 
                     best_score = std::max(best_score,score);
+                    alpha = std::max(alpha, score);
+
+                    if (beta <= alpha) return best_score;
                 }
                 else {
                     updateCell('x',board,i,j);
-                    int score = minimax(board,depth - 1,true);
+                    int score = minimax(board,depth - 1,true, alpha, beta);
                     board[i][j] = ' ';
 
                     best_score = std::min(best_score,score);
+                    beta = std::min(beta, score);
+
+                    if (beta <= alpha) return best_score;
                 }
             }
         }
@@ -272,7 +278,7 @@ int Game::AIMinimaxCaller(char (&board)[3][3], const char& symbol, const int& de
         for (int j = 0; j < 3; ++j) {
             if (isCellEmpty(clone,i,j)) {
                 updateCell(symbol,clone,i,j);
-                int score = (maximizing)? minimax(clone,depth,false) : minimax(clone,depth,true); 
+                int score = (maximizing)? minimax(clone,depth,false, INT_MIN, INT_MAX) : minimax(clone,depth,true, INT_MIN, INT_MAX); 
                 clone[i][j] = ' ';
 
                 if ((maximizing && score > best_score) || (!maximizing && score < best_score)) {
